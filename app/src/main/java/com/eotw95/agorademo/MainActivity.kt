@@ -1,5 +1,18 @@
 package com.eotw95.agorademo
 
+import android.Manifest.permission.ACCESS_NETWORK_STATE
+import android.Manifest.permission.ACCESS_WIFI_STATE
+import android.Manifest.permission.BLUETOOTH
+import android.Manifest.permission.BLUETOOTH_CONNECT
+import android.Manifest.permission.BLUETOOTH_SCAN
+import android.Manifest.permission.CAMERA
+import android.Manifest.permission.INTERNET
+import android.Manifest.permission.MODIFY_AUDIO_SETTINGS
+import android.Manifest.permission.READ_PHONE_STATE
+import android.Manifest.permission.RECORD_AUDIO
+import android.app.Activity
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -11,6 +24,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.eotw95.agorademo.ui.theme.AgoraDemoTheme
 
 class MainActivity : ComponentActivity() {
@@ -19,29 +34,44 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             AgoraDemoTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                if (isGrantedSelfPermission(getRequiredPermissions())) {
+                    // Todo: Agpra setup
+                } else {
+                    ActivityCompat.requestPermissions(this, getRequiredPermissions(), 22)
                 }
+                AgoraDemoApp()
             }
         }
     }
-}
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+    /**
+     * ユーザーの許可設定が必要なPermission
+     */
+    private fun getRequiredPermissions(): Array<String> {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            arrayOf(
+                CAMERA,
+                RECORD_AUDIO,
+                BLUETOOTH_CONNECT,
+                READ_PHONE_STATE
+            )
+        } else {
+            arrayOf(
+                CAMERA,
+                RECORD_AUDIO
+            )
+        }
+    }
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    AgoraDemoTheme {
-        Greeting("Android")
+    /**
+     * Permissionが許可されているかどうかチェック
+     */
+    private fun isGrantedSelfPermission(permissions: Array<String>): Boolean {
+        permissions.forEach { permission ->
+            val granted = ContextCompat.checkSelfPermission(application, permission)
+            if (granted == PackageManager.PERMISSION_GRANTED) return false
+        }
+
+        return true
     }
 }

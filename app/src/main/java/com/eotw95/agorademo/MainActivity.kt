@@ -11,6 +11,7 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.collectAsState
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.eotw95.agorademo.ui.theme.AgoraDemoTheme
@@ -28,15 +29,15 @@ class MainActivity : ComponentActivity() {
 
         if (isGrantedSelfPermission(getRequiredPermissions())) {
             startVoiceCalling()
+
+            enableEdgeToEdge()
+            setContent {
+                AgoraDemoTheme {
+                    VideoCallingScreen(agoraService)
+                }
+            }
         } else {
             ActivityCompat.requestPermissions(this, getRequiredPermissions(), 22)
-        }
-
-        enableEdgeToEdge()
-        setContent {
-            AgoraDemoTheme {
-                AgoraDemoApp()
-            }
         }
     }
 

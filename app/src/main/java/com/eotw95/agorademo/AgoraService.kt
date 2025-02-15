@@ -7,11 +7,16 @@ import io.agora.rtc2.Constants
 import io.agora.rtc2.IRtcEngineEventHandler
 import io.agora.rtc2.RtcEngine
 import io.agora.rtc2.RtcEngineConfig
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * Agora のAPIクライアント
  */
 interface AgoraService {
+    var mRtcEngine: RtcEngine?
+    var partnerUserId: StateFlow<Int>
+
     fun initializeRtcEngine(context: Context)
     fun joinChannel()
     fun leaveChannel()
@@ -22,7 +27,10 @@ class  AgoraServiceImpl: AgoraService {
         private const val TAG = "AgoraServiceImpl"
     }
 
-    private var mRtcEngine: RtcEngine? = null
+    override var mRtcEngine: RtcEngine? = null
+
+    private var _partnerUserId = MutableStateFlow(0)
+    override var partnerUserId: StateFlow<Int> = _partnerUserId
 
     /**
      * Rtc Engine を生成
@@ -44,6 +52,7 @@ class  AgoraServiceImpl: AgoraService {
                 override fun onUserJoined(uid: Int, elapsed: Int) {
                     super.onUserJoined(uid, elapsed)
                     println("onUserJoined")
+                    _partnerUserId.value = uid
                 }
 
                 override fun onUserOffline(uid: Int, reason: Int) {
@@ -80,7 +89,11 @@ class  AgoraServiceImpl: AgoraService {
             clientRoleType = Constants.CLIENT_ROLE_BROADCASTER
             channelProfile = Constants.CHANNEL_PROFILE_COMMUNICATION
             publishMicrophoneTrack = true
+            publishCameraTrack = true
         }
+
+        // ビデオ機能を有効化
+        enableVideo()
 
         // Channelに参加
         mRtcEngine?.joinChannel(
@@ -98,5 +111,15 @@ class  AgoraServiceImpl: AgoraService {
     override fun leaveChannel() {
         mRtcEngine?.leaveChannel()
         mRtcEngine = null
+    }
+
+    /**
+     * ビデオ機能を有効化
+     */
+    private fun enableVideo() {
+        mRtcEngine?.apply {
+            enableVideo()
+            startPreview()
+        }
     }
 }

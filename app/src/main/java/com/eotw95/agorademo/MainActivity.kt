@@ -109,7 +109,7 @@ class MainActivity : ComponentActivity() {
 
         permissions.forEach { permission ->
             val granted = ContextCompat.checkSelfPermission(application, permission)
-            if (granted == PackageManager.PERMISSION_GRANTED) return false
+            if (granted != PackageManager.PERMISSION_GRANTED) return false
         }
 
         return true

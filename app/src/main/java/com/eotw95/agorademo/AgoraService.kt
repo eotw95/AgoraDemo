@@ -8,9 +8,13 @@ import io.agora.rtc2.IRtcEngineEventHandler
 import io.agora.rtc2.RtcEngine
 import io.agora.rtc2.RtcEngineConfig
 
+/**
+ * Agora のAPIクライアント
+ */
 interface AgoraService {
     fun initializeRtcEngine(context: Context)
     fun joinChannel()
+    fun leaveChannel()
 }
 
 class  AgoraServiceImpl: AgoraService {
@@ -18,12 +22,16 @@ class  AgoraServiceImpl: AgoraService {
         private const val TAG = "AgoraServiceImpl"
     }
 
-    var mRtcEngine: RtcEngine? = null
+    private var mRtcEngine: RtcEngine? = null
 
     /**
      * Rtc Engine を生成
      */
     override fun initializeRtcEngine(context: Context) {
+        // 古いRtcEngineの影響を受けないようにするため初期化前に解放する
+        RtcEngine.destroy()
+
+        // RtcEngineConfigを生成
         val rtcConfig = RtcEngineConfig().apply {
             mAppId = AgoraConfig.APP_ID
             mContext = context
@@ -50,6 +58,7 @@ class  AgoraServiceImpl: AgoraService {
             }
         }
 
+        // RtcEngineを生成
         try {
             mRtcEngine = RtcEngine.create(rtcConfig)
         } catch (e: Exception) {
@@ -66,17 +75,28 @@ class  AgoraServiceImpl: AgoraService {
             return
         }
 
+        // ChannelMediaOptionsを生成
         val channelMediaOptions = ChannelMediaOptions().apply {
             clientRoleType = Constants.CLIENT_ROLE_BROADCASTER
             channelProfile = Constants.CHANNEL_PROFILE_COMMUNICATION
-            publishMicrophoneTrack = true;
+            publishMicrophoneTrack = true
         }
 
+        // Channelに参加
         mRtcEngine?.joinChannel(
             AgoraConfig.TOKEN,
             AgoraConfig.CHANNEL_NAME,
             0,
             channelMediaOptions
         )
+    }
+
+    /**
+     * Channelから退出
+     * RtcEngineインスタンスを解放
+     */
+    override fun leaveChannel() {
+        mRtcEngine?.leaveChannel()
+        mRtcEngine = null
     }
 }

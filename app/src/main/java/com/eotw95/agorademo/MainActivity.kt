@@ -1,16 +1,9 @@
 package com.eotw95.agorademo
 
-import android.Manifest.permission.ACCESS_NETWORK_STATE
-import android.Manifest.permission.ACCESS_WIFI_STATE
-import android.Manifest.permission.BLUETOOTH
 import android.Manifest.permission.BLUETOOTH_CONNECT
-import android.Manifest.permission.BLUETOOTH_SCAN
 import android.Manifest.permission.CAMERA
-import android.Manifest.permission.INTERNET
-import android.Manifest.permission.MODIFY_AUDIO_SETTINGS
 import android.Manifest.permission.READ_PHONE_STATE
 import android.Manifest.permission.RECORD_AUDIO
-import android.app.Activity
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -18,21 +11,17 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.eotw95.agorademo.ui.theme.AgoraDemoTheme
+import io.agora.rtc2.RtcEngine
 
 class MainActivity : ComponentActivity() {
     companion object {
-        private val TAG = "MainActivity"
+        private const val TAG = "MainActivity"
     }
+
+    private val agoraService = AgoraServiceImpl()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,6 +38,12 @@ class MainActivity : ComponentActivity() {
                 AgoraDemoApp()
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        agoraService.leaveChannel()
+        RtcEngine.destroy()
     }
 
     /**
@@ -75,7 +70,6 @@ class MainActivity : ComponentActivity() {
     private fun startVoiceCalling() {
         Log.d(TAG, "startVoiceCalling")
 
-        val agoraService = AgoraServiceImpl()
         agoraService.initializeRtcEngine(applicationContext)
         agoraService.joinChannel()
     }

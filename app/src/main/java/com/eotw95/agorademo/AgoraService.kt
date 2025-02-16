@@ -15,7 +15,8 @@ import kotlinx.coroutines.flow.StateFlow
  */
 interface AgoraService {
     var mRtcEngine: RtcEngine?
-    var partnerUserId: StateFlow<Int>
+    var remoteUserId: StateFlow<Int?>
+    var localUserId: StateFlow<Int?>
 
     fun initializeRtcEngine(context: Context)
     fun joinChannel()
@@ -27,10 +28,13 @@ class  AgoraServiceImpl: AgoraService {
         private const val TAG = "AgoraServiceImpl"
     }
 
-    override var mRtcEngine: RtcEngine? = null
+    private var _remoteUserId = MutableStateFlow<Int?>(null)
+    private var _localUserId = MutableStateFlow<Int?>(null)
 
-    private var _partnerUserId = MutableStateFlow(0)
-    override var partnerUserId: StateFlow<Int> = _partnerUserId
+    override var remoteUserId: StateFlow<Int?> = _remoteUserId
+    override var localUserId: StateFlow<Int?> = _localUserId
+
+    override var mRtcEngine: RtcEngine? = null
 
     /**
      * Rtc Engine を生成
@@ -44,20 +48,27 @@ class  AgoraServiceImpl: AgoraService {
             mAppId = AgoraConfig.APP_ID
             mContext = context
             mEventHandler = object : IRtcEngineEventHandler() {
+                /**
+                 * Local UserがChannelに参加成功した契機で通知されるコールバック
+                 */
                 override fun onJoinChannelSuccess(channel: String?, uid: Int, elapsed: Int) {
                     super.onJoinChannelSuccess(channel, uid, elapsed)
-                    println("onJoinChannelSuccess")
+                    Log.d(TAG, "onJoinChannelSuccess channel: $channel uid: $uid")
+                    _localUserId.value = uid
                 }
 
+                /**
+                 * Remote UserがChannelに参加成功した契機で通知されるコールバック
+                 */
                 override fun onUserJoined(uid: Int, elapsed: Int) {
                     super.onUserJoined(uid, elapsed)
-                    println("onUserJoined")
-                    _partnerUserId.value = uid
+                    Log.d(TAG, "onUserJoined uid: $uid")
+                    _remoteUserId.value = uid
                 }
 
                 override fun onUserOffline(uid: Int, reason: Int) {
                     super.onUserOffline(uid, reason)
-                    println("onUserOffline")
+                    Log.d(TAG, "onUserOffline uid: $uid reason: $reason")
                 }
 
                 override fun onError(err: Int) {

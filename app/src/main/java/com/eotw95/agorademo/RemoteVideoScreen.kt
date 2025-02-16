@@ -19,6 +19,7 @@ fun RemoteVideoScreen(rtcEngine: RtcEngine, uid: Int) {
             factory = { context ->
                 SurfaceView(context).apply {
                     rtcEngine.setupRemoteVideo(
+                        // uidはIRtcEngineEventHandler#onUserJoined()で通知されるuidを使用する
                         VideoCanvas(this, VideoCanvas.RENDER_MODE_FIT, uid)
                     )
                 }
